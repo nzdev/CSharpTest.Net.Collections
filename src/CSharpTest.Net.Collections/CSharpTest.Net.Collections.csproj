@@ -2,7 +2,7 @@
   <PropertyGroup>
     <ProductVersion>9.0.30729</ProductVersion>
     <RootNamespace>CSharpTest.Net</RootNamespace>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net6.0;netstandard2.1;netstandard2.0</TargetFrameworks>
     <AssemblyTitle>CSharpTest.Net.Collections.dll</AssemblyTitle>
     <Company>CSharpTest.Net.Collections (http://CSharpTest.Net/)</Company>
     <Product></Product>
