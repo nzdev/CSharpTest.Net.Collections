@@ -26,12 +26,12 @@ namespace CSharpTest.Net.Library.Test
 	public partial class TestTempFiles
 	{
 		#region TestFixture SetUp/TearDown
-		[TestFixtureSetUp]
+		[SetUp]
 		public virtual void Setup()
 		{
 		}
 
-		[TestFixtureTearDown]
+		[TearDown]
 		public virtual void Teardown()
 		{
 		}
@@ -263,28 +263,37 @@ namespace CSharpTest.Net.Library.Test
 			Assert.AreEqual(0, f.Length);
 		}
 
-		[Test, ExpectedException(typeof(ObjectDisposedException))]
+		[Test]
 		public void TestInfoOnDisposed()
 		{
-			TempFile f = new TempFile();
-			f.Dispose();
-			f.Info.OpenText();
+			Assert.Throws<ObjectDisposedException>(() =>
+            {
+                TempFile f = new TempFile();
+                f.Dispose();
+                f.Info.OpenText();
+            });
 		}
 
-		[Test, ExpectedException(typeof(ObjectDisposedException))]
+		[Test]
 		public void TestPathOnDisposed()
 		{
-			TempFile f = new TempFile();
-			f.Dispose();
-			Assert.Fail(f.TempPath);
+			Assert.Throws<ObjectDisposedException>(() =>
+            {
+                TempFile f = new TempFile();
+                f.Dispose();
+                Assert.Fail(f.TempPath);
+            });
 		}
 
 
-		[Test, ExpectedException(typeof(ArgumentException))]
+		[Test]
 		public void TestBadPathOnAttach()
 		{
-			TempFile f = TempFile.Attach("@~+_(%!&($_~!(&*+%_~&^%^|||&&&\\\\ THIS IS AN INVALID FILE NAME.*");
-			f.Dispose();
+			Assert.Throws<ArgumentException>(() =>
+            {
+                TempFile f = TempFile.Attach("@~+_(%!&($_~!(&*+%_~&^%^|||&&&\\\\ THIS IS AN INVALID FILE NAME.*");
+                f.Dispose();
+            });
 		}
 
 		[Test]

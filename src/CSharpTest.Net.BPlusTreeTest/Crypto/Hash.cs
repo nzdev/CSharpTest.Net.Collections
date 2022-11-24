@@ -43,6 +43,7 @@ namespace CSharpTest.Net.Crypto
                 return new Hash(algo.ComputeHash(data == null ? Stream.Null : data));
         }
 
+#pragma warning disable SYSLIB0021 // Type or member is obsolete
         /// <summary> Computes an MD5 hash </summary>
         public static Hash MD5(byte[] bytes) { return Create<MD5CryptoServiceProvider>(bytes); }
         /// <summary> Computes an MD5 hash </summary>
@@ -67,6 +68,7 @@ namespace CSharpTest.Net.Crypto
         public static Hash SHA512(byte[] bytes) { return Create<SHA512Managed>(bytes); }
         /// <summary> Computes an SHA512 hash </summary>
         public static Hash SHA512(Stream bytes) { return Create<SHA512Managed>(bytes); }
+#pragma warning restore SYSLIB0021 // Type or member is obsolete
 
         /// <summary> Creates a comparable Hash object from the given hashcode bytes </summary>
         public static Hash FromBytes(byte[] bytes) { return new Hash((byte[])bytes.Clone()); }

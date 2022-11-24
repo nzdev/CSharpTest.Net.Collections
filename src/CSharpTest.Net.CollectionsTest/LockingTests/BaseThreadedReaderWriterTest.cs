@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Synchronization;
@@ -40,6 +41,7 @@ namespace CSharpTest.Net.Library.Test.LockingTests
                 l.ReleaseWrite();
             }
         }
+
         [Test]
         public void TestWriterBlocksReader()
         {
@@ -55,6 +57,7 @@ namespace CSharpTest.Net.Library.Test.LockingTests
                 l.ReleaseRead();
             }
         }
+
         [Test]
         public void TestWriterBlocksWriter()
         {
@@ -70,6 +73,7 @@ namespace CSharpTest.Net.Library.Test.LockingTests
                 l.ReleaseWrite();
             }
         }
+
         [Test]
         public virtual void TestReaderAllowsReader()
         {
@@ -81,6 +85,7 @@ namespace CSharpTest.Net.Library.Test.LockingTests
                 l.ReleaseRead();
             }
         }
+
         [Test]
         public virtual void TestWriteToReadRecursion()
         {
@@ -92,6 +97,7 @@ namespace CSharpTest.Net.Library.Test.LockingTests
                 { }
             }
         }
+
         [Test]
         public virtual void TestWriteToWriteRecursion()
         {
@@ -110,7 +116,11 @@ namespace CSharpTest.Net.Library.Test.LockingTests
                 { }
             }
         }
+
         [Test]
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         public void FullContentionTest()
         {
             ManualResetEvent stop = new ManualResetEvent(false);
@@ -151,27 +161,40 @@ namespace CSharpTest.Net.Library.Test.LockingTests
             Assert.AreEqual(0, errors);
             System.Diagnostics.Trace.TraceInformation("Iterations completed: {0} * 100", iterations[0]);
         }
-        [Test, ExpectedException(typeof(TimeoutException))]
+
+        [Test]
         public void TestThreadedReadTimeout()
         {
-            using (ILockStrategy l = LockFactory.Create())
+            Assert.Throws<TimeoutException>(() =>
             {
-                using (new ThreadedWriter(l))
-                using (l.Read(0))
-                { }
-            }
+                using (ILockStrategy l = LockFactory.Create())
+                {
+                    using (new ThreadedWriter(l))
+                    using (l.Read(0))
+                    { }
+                }
+            });
+            
         }
-        [Test, ExpectedException]
+
+        [Test]
         public void TestExcessiveReleaseWrite()
         {
-            using (ILockStrategy l = LockFactory.Create())
-                l.ReleaseWrite();
+            Assert.Throws(Is.InstanceOf<Exception>(), () =>
+            {
+                using (ILockStrategy l = LockFactory.Create())
+                    l.ReleaseWrite();
+            });
         }
-        [Test, ExpectedException]
+
+        [Test]
         public void TestExcessiveReleaseRead()
         {
-            using (ILockStrategy l = LockFactory.Create())
-                l.ReleaseRead();
+            Assert.Throws(Is.InstanceOf<Exception>(), () =>
+            {
+                using (ILockStrategy l = LockFactory.Create())
+                    l.ReleaseRead();
+            });
         }
     }
 }

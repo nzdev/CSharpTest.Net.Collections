@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading;
 using CSharpTest.Net.Threading;
 using NUnit.Framework;
@@ -24,6 +25,9 @@ using Action = System.Threading.ThreadStart;
 namespace CSharpTest.Net.Library.Test
 {
     [TestFixture]
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public class TestWorkQueue
     {
         [Test]
@@ -119,14 +123,17 @@ namespace CSharpTest.Net.Library.Test
             Interlocked.Decrement(ref counters[0]);
         }
 
-        [Test, ExpectedException(typeof(ObjectDisposedException))]
+        [Test]
         public void TestEnqueueAfterDispose()
         {
-            int counter = 0;
-            WorkQueue worker = new WorkQueue(1);
-            worker.Complete(false, 100);
-            worker.Enqueue(delegate() { counter++; });
-            Assert.Fail("Enqueue after Dispose()", counter);
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                int counter = 0;
+                WorkQueue worker = new WorkQueue(1);
+                worker.Complete(false, 100);
+                worker.Enqueue(delegate () { counter++; });
+                Assert.Fail("Enqueue after Dispose()", counter);
+            });
         }
     }
 }

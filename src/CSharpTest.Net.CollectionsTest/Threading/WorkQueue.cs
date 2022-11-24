@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading;
 using Action = System.Threading.ThreadStart;
 
@@ -24,6 +25,9 @@ namespace CSharpTest.Net.Threading
     /// An extremely basic WorkQueue using a fixed number of threads to execute Action() or Action&lt;T> delegates
     /// </summary>
     [System.Diagnostics.DebuggerNonUserCode]
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public class WorkQueue : WorkQueue<Action>
     {
         /// <summary>
@@ -56,6 +60,9 @@ namespace CSharpTest.Net.Threading
     /// An extremely basic WorkQueue using a fixed number of threads to execute Action&lt;T> 
     /// over the enqueued instances of type T, aggregates an instance of WorkQueue()
     /// </summary>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public class WorkQueue<T> : IWorkQueue<T>
     {
         readonly Action<T> _process;
@@ -117,7 +124,7 @@ namespace CSharpTest.Net.Threading
                     if (!t.Join(timeout))
                     {
                         completed = false;
-                        t.Abort();
+                        t.Interrupt();
                         if (!t.Join(10000))
                             shutdownFailed = true;
                     }

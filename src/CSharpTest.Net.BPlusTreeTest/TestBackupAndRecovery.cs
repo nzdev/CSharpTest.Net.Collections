@@ -24,10 +24,14 @@ using NUnit.Framework;
 using CSharpTest.Net.Threading;
 using System.Threading;
 using CSharpTest.Net.Reflection;
+using System.Runtime.Versioning;
 
 namespace CSharpTest.Net.BPlusTree.Test
 {
     [TestFixture]
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public class TestBackupAndRecovery
     {
         BPlusTree<Guid, TestInfo>.OptionsV2 GetOptions(TempFile temp)

@@ -25,6 +25,7 @@ using CSharpTest.Net.Threading;
 using NUnit.Framework;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Reflection;
+using System.Runtime.Versioning;
 
 namespace CSharpTest.Net.BPlusTree.Test
 {
@@ -34,13 +35,13 @@ namespace CSharpTest.Net.BPlusTree.Test
         protected static int RecordsCreated;
         protected TempFile TempFile;
         #region TestFixture SetUp/TearDown
-        [TestFixtureSetUp]
+        [SetUp]
         public virtual void Setup()
         {
             TempFile = new TempFile();
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public virtual void Teardown()
         {
             TempFile.Dispose();
@@ -52,6 +53,9 @@ namespace CSharpTest.Net.BPlusTree.Test
         { RecordsCreated = 0; }
 
         [Test]
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         public void TestAtomicUpdate()
         {
             int threads = Environment.ProcessorCount;
@@ -128,6 +132,9 @@ namespace CSharpTest.Net.BPlusTree.Test
         }
 
         [Test, Explicit]
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         public void LoopTestAbortWritersAndRecover()
         {
             for (int i = 0; i < 10; i++)
@@ -135,6 +142,9 @@ namespace CSharpTest.Net.BPlusTree.Test
         }
 
         [Test]
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         public void TestAbortWritersAndRecover()
         {
             BPlusTree<KeyInfo, DataValue>.Options options = new BPlusTree<KeyInfo, DataValue>.Options(
@@ -177,6 +187,9 @@ namespace CSharpTest.Net.BPlusTree.Test
             }
         }
 
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         int StartAndAbortWriters(BPlusTreeOptions<KeyInfo, DataValue> options, TempFile copy)
         {
             RecordsCreated = 0;
@@ -220,6 +233,9 @@ namespace CSharpTest.Net.BPlusTree.Test
         class ExpectedException : ApplicationException {}
 
         [Test]
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         public void TestErrorsOnInsertAndDelete()
         {
             const int CountPerThread = 100;
@@ -263,6 +279,9 @@ namespace CSharpTest.Net.BPlusTree.Test
         }
 
         [Test]
+#if NET5_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
         public void TestConcurrentCreateReadUpdateDelete8000()
         {
             BPlusTree<KeyInfo, DataValue>.OptionsV2 options = new BPlusTree<KeyInfo, DataValue>.OptionsV2(

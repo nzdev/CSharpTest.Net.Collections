@@ -22,12 +22,12 @@ namespace CSharpTest.Net.Library.Test
 	public partial class TestDisposable
 	{
 		#region TestFixture SetUp/TearDown
-		[TestFixtureSetUp]
+		[SetUp]
 		public virtual void Setup()
 		{
 		}
 
-		[TestFixtureTearDown]
+		[TearDown]
 		public virtual void Teardown()
 		{
 		}
@@ -101,12 +101,15 @@ namespace CSharpTest.Net.Library.Test
 			o.TestAssert();
 		}
 
-		[Test, ExpectedException(typeof(ObjectDisposedException))]
+		[Test]
 		public void TestAssertWhenDisposed()
 		{
-			MyDisposable o = new MyDisposable();
-			o.Dispose();
-			o.TestAssert();
+			Assert.Throws<ObjectDisposedException>(() =>
+			{
+                MyDisposable o = new MyDisposable();
+                o.Dispose();
+                o.TestAssert();
+            });
 		}
 	}
 }

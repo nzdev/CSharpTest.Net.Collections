@@ -274,43 +274,49 @@ namespace CSharpTest.Net.Library.Test
                 Assert.AreEqual(orig, IOStream.ReadAllBytes(ff.Open(id, FileAccess.Read)));
             }
         }
-        [Test, ExpectedException(typeof(ObjectDisposedException))]
+        [Test]
         public void TestTransactFail()
         {
-            SharedMemoryStream shared = new SharedMemoryStream();
-            FragmentedFile.CreateNew(shared, 512, 100, 2).Dispose();
-
-            using (FragmentedFile ff = new FragmentedFile(shared, 512, 100, 2))
+            Assert.Throws<ObjectDisposedException>(() =>
             {
-                long id;
-                byte[] bytes = MakeBytes(255);
-                using (Stream write = ff.Create(out id))
-                using (ITransactable trans = (ITransactable)write)
+                SharedMemoryStream shared = new SharedMemoryStream();
+                FragmentedFile.CreateNew(shared, 512, 100, 2).Dispose();
+
+                using (FragmentedFile ff = new FragmentedFile(shared, 512, 100, 2))
                 {
-                    write.Write(bytes, 0, bytes.Length);
-                    ff.Dispose();
-                    trans.Commit();
+                    long id;
+                    byte[] bytes = MakeBytes(255);
+                    using (Stream write = ff.Create(out id))
+                    using (ITransactable trans = (ITransactable)write)
+                    {
+                        write.Write(bytes, 0, bytes.Length);
+                        ff.Dispose();
+                        trans.Commit();
+                    }
                 }
-            }
+            });
         }
-        [Test, ExpectedException(typeof(ObjectDisposedException))]
+        [Test]
         public void TestTransactWriteAfterCommit()
         {
-            SharedMemoryStream shared = new SharedMemoryStream();
-            FragmentedFile.CreateNew(shared, 512, 100, 2).Dispose();
-
-            using (FragmentedFile ff = new FragmentedFile(shared, 512, 100, 2))
+            Assert.Throws<ObjectDisposedException>(() =>
             {
-                long id;
-                byte[] bytes = MakeBytes(255);
-                using (Stream write = ff.Create(out id))
-                using (ITransactable trans = (ITransactable)write)
+                SharedMemoryStream shared = new SharedMemoryStream();
+                FragmentedFile.CreateNew(shared, 512, 100, 2).Dispose();
+
+                using (FragmentedFile ff = new FragmentedFile(shared, 512, 100, 2))
                 {
-                    write.Write(bytes, 0, bytes.Length);
-                    trans.Commit();
-                    write.Write(bytes, 0, bytes.Length);
+                    long id;
+                    byte[] bytes = MakeBytes(255);
+                    using (Stream write = ff.Create(out id))
+                    using (ITransactable trans = (ITransactable)write)
+                    {
+                        write.Write(bytes, 0, bytes.Length);
+                        trans.Commit();
+                        write.Write(bytes, 0, bytes.Length);
+                    }
                 }
-            }
+            });
         }
         [Test]
         public void TestRollbackCreate()
