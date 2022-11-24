@@ -310,7 +310,7 @@ namespace CSharpTest.Net.IO
         }
 
         #region void FlushStream(Stream stream)
-#if !NET40
+#if !NET40 && !NET5_0_OR_GREATER && !NETCOREAPP1_0_OR_GREATER // TODO: See whats causing errors in Net 5+
         [System.Runtime.InteropServices.DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool FlushFileBuffers(IntPtr hFile);
         void FlushStream(Stream stream)
