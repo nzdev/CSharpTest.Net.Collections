@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\CSharpTest.Net.Collections\CSharpTest.Net.Collections.csproj" />
+    <ProjectReference Include="..\CSharpTest.Net.Collections\CSharpTest.Net.Collections.csproj" />
   </ItemGroup>
 
 </Project>
