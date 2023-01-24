@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTest.Net.BPlusTree.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTest.Net.Collections.Test", "src\CSharpTest.Net.CollectionsTest\CSharpTest.Net.Collections.Test.csproj", "{097601FB-7E62-47DA-8E48-B56C9AD5DF20}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpText.Net.Benchmark", "CSharpText.Net.Benchmark\CSharpText.Net.Benchmark.csproj", "{327BA2C1-13F0-434C-874E-79D117586A06}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpText.Net.Benchmark", "src\CSharpText.Net.Benchmark\CSharpText.Net.Benchmark.csproj", "{327BA2C1-13F0-434C-874E-79D117586A06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

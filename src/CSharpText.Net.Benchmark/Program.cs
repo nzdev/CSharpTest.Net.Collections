@@ -1,6 +1,9 @@
 ﻿//using BenchmarkDotNet.Attributes;
 //using BenchmarkDotNet.Jobs;
 //using BenchmarkDotNet.Running;
+
+using System;
+using System.Diagnostics;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Serialization;
 using System.IO;
@@ -17,12 +20,14 @@ namespace CSharpText.Net.Benchmark
                 CreateFile = CreatePolicy.Always,
                 FileName = Path.GetTempFileName(),
                 CachePolicy = CachePolicy.None,
-                StoragePerformance = StoragePerformance.CommitToDisk,
+                StoragePerformance = StoragePerformance.CommitToCache,
                 FileBlockSize = 4096
             };
 
-            const int entries = 5000;
+            const int entries = 500;
 
+            var sw = new Stopwatch();
+            sw.Start();
             using (var tree = new BPlusTree<int, string>(options))
             {
                 for (var i = 0; i < entries; i++)
@@ -30,6 +35,8 @@ namespace CSharpText.Net.Benchmark
                     tree[i] = Lipsum.Copy;
                 }
             }
+            sw.Stop();
+            Console.WriteLine(sw.Elapsed);
         }
     }
 

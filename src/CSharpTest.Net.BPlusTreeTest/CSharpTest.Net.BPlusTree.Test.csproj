@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProductVersion>9.0.30729</ProductVersion>
-    <TargetFrameworks>net7.0;net6.0;net48;net462</TargetFrameworks>
+    <TargetFrameworks>net7.0;net6.0</TargetFrameworks>
     <OutputPath>bin\</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ErrorReport>none</ErrorReport>
