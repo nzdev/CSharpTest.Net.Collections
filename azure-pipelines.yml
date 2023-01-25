@@ -4,7 +4,10 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+  - main
+  - refs/tags/release/*
+  - refs/pull/*
+
 variables:
   solution: CSharpTest.Net.Collections.sln
   buildConfiguration: Release
@@ -16,6 +19,30 @@ stages:
           pool:
             vmImage: 'windows-latest'
           steps:
+            - task: PowerShell@2
+              displayName: 'Set version number'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  $tag = "$(Build.SourceBranch)".Replace("refs/tags/release/","")
+                  $regexString = "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
+                  $regex = new-object System.Text.RegularExpressions.Regex ($regexString,[System.Text.RegularExpressions.RegexOptions]::MultiLine)
+                  Write-Host "Pushed tag is $tag"
+                  if ($tag -match $regex)
+                  {
+                    Write-Host "$tag conforms to semantic version; Setting Azure DevOps variable PACKAGE_VERSION..."
+                    Write-Host "##vso[build.addbuildtag]ReleaseBuild"
+                  }
+                  else
+                  {
+                    # Error out if the tag doesn't conform to semantic versioning standard
+                    Write-Host "$tag does not conform to semantic versioning"
+                    Write-Host "##vso[build.addbuildtag]ContinuouslyBuild"
+                    $tag = "0.0.0-nightly$(Build.BuildNumber)"
+                  }
+                  Write-Host "##vso[task.setvariable variable=PACKAGE_VERSION]$tag"
+                  Write-Host "PACKAGE_VERSION set to 0.0.0-nightly$(Build.BuildNumber)"
+
             - task: UseDotNet@2
               displayName: Use .NET 6.x
               inputs:
@@ -50,3 +77,43 @@ stages:
               inputs:
                 targetPath: $(Build.ArtifactStagingDirectory)
                 artifactName: NuGet
+            - task: PublishPipelineArtifact@1
+              displayName: Publish build artifacts
+              inputs:
+                targetPath: $(Build.SourcesDirectory)
+                artifactName: build_output
+    - stage: Unit
+      displayName: Unit Tests
+      dependsOn: Build
+      jobs:
+        # Unit Tests
+        - job:
+          displayName: Unit Tests
+          strategy:
+            matrix:
+              Windows:
+                vmImage: 'windows-latest'
+#              Linux:
+#                vmImage: 'ubuntu-latest'
+#              macOS:
+#                vmImage: 'macOS-latest'
+          pool:
+            vmImage: $(vmImage)
+          steps:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download build artifacts
+              inputs:
+                artifact: build_output
+                path: $(Build.SourcesDirectory)
+            - task: UseDotNet@2
+              displayName: Use .NET 7.x
+              inputs:
+                version: 7.x
+                performMultiLevelLookup: true
+            - task: DotNetCoreCLI@2
+              displayName: Run dotnet test
+              inputs:
+                command: test
+                projects: '**/*.Test.csproj'
+                arguments: '--configuration $(buildConfiguration) --no-build'
+                testRunTitle: Unit Tests - $(Agent.OS)
