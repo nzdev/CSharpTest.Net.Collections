@@ -77,11 +77,6 @@ stages:
               inputs:
                 targetPath: $(Build.ArtifactStagingDirectory)
                 artifactName: NuGet
-            - task: PublishPipelineArtifact@1
-              displayName: Publish build artifacts
-              inputs:
-                targetPath: $(Build.SourcesDirectory)
-                artifactName: build_output
     - stage: Unit
       displayName: Unit Tests
       dependsOn: Build
@@ -100,11 +95,6 @@ stages:
           pool:
             vmImage: $(vmImage)
           steps:
-            - task: DownloadPipelineArtifact@2
-              displayName: Download build artifacts
-              inputs:
-                artifact: build_output
-                path: $(Build.SourcesDirectory)
             - task: UseDotNet@2
               displayName: Use .NET 7.x
               inputs:
@@ -115,5 +105,5 @@ stages:
               inputs:
                 command: test
                 projects: '**/*.Test.csproj'
-                arguments: '--configuration $(buildConfiguration) --no-build'
+                arguments: '--configuration $(buildConfiguration)'
                 testRunTitle: Unit Tests - $(Agent.OS)
