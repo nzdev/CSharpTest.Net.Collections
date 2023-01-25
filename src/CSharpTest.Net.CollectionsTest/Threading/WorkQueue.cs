@@ -90,7 +90,7 @@ namespace CSharpTest.Net.Threading
             for (int i = 0; i < nThreads; i++)
             {
                 _workers[i] = new Thread(Run);
-                _workers[i].SetApartmentState(ApartmentState.MTA);
+              //  _workers[i].SetApartmentState(ApartmentState.MTA);
                 _workers[i].IsBackground = true;
                 _workers[i].Name = String.Format("WorkQueue[{0}]", i);
                 _workers[i].Start();
