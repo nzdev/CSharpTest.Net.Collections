@@ -42,8 +42,8 @@ stages:
             - task: PublishPipelineArtifact@1
               displayName: Publish nupkg
               inputs:
-                targetPath: $(Build.ArtifactStagingDirectory)/nupkg
-                artifactName: nupkg
+                targetPath: $(Build.ArtifactStagingDirectory)
+                artifactName: NuGet
             - task: PublishPipelineArtifact@1
               displayName: Publish build artifacts
               inputs:
