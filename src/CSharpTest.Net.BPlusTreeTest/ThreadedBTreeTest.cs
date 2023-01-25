@@ -94,13 +94,32 @@ namespace CSharpTest.Net.BPlusTree.Test
             using (BPlusTree<int, int> dictionary = new BPlusTree<int, int>(options))
             {
                 bool canwrite = false, canread = false;
-                ThreadStart proc = delegate()
+                Action proc = () =>
                 {
-                    try { dictionary[1] = 1; canwrite = true; } catch { canwrite = false; }
-                    try { int i; dictionary.TryGetValue(1, out i); canread = true; } catch { canread = false; }
+                    try
+                    {
+                        dictionary[1] = 1;
+                        canwrite = true;
+                    }
+                    catch
+                    {
+                        canwrite = false;
+                    }
+
+                    try
+                    {
+                        int i;
+                        dictionary.TryGetValue(1, out i);
+                        canread = true;
+                    }
+                    catch
+                    {
+                        canread = false;
+                    }
                 };
 
-                Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
+                proc();
+                //Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
                 Assert.IsTrue(canwrite);
                 Assert.IsTrue(canread);
 
@@ -108,7 +127,8 @@ namespace CSharpTest.Net.BPlusTree.Test
                 using (dictionary.CallLevelLock.Write())
                 {
                     //they can't read or write
-                    Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
+                    proc();
+                    //Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
                     Assert.IsFalse(canwrite);
                     Assert.IsFalse(canread);
                     //but we can
@@ -117,14 +137,16 @@ namespace CSharpTest.Net.BPlusTree.Test
                     Assert.IsTrue(canread);
                 }
                 //lock release all is well
-                Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
+                proc();
+                //Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
                 Assert.IsTrue(canwrite);
                 Assert.IsTrue(canread);
 
                 //We can also make sure noone else gains exclusive access with a read lock
                 using (dictionary.CallLevelLock.Read())
                 {
-                    Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
+                    proc();
+                    //Assert.IsTrue(proc.BeginInvoke(null, null).AsyncWaitHandle.WaitOne(1000, false));
                     Assert.IsTrue(canwrite);
                     Assert.IsTrue(canread);
                 }

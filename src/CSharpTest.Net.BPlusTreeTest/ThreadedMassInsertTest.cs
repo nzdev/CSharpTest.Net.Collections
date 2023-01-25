@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.IO;
 using CSharpTest.Net.Serialization;
@@ -27,6 +28,8 @@ namespace CSharpTest.Net.BPlusTree.Test
     public class ThreadedMassInsertTest
     {
         static readonly ManualResetEvent mreStop = new ManualResetEvent(false);
+
+
 
         [Test]
         public void TestConcurrency()
@@ -42,29 +45,29 @@ namespace CSharpTest.Net.BPlusTree.Test
                 using (BPlusTree<Guid, TestInfo> tree = new BPlusTree<Guid, TestInfo>(options))
                 {
                     tree.EnableCount();
-                    var actions = new List<IAsyncResult>();
+                    var actions = new List<Task>();
                     var tests = new Action<BPlusTree<Guid, TestInfo>>[] 
                     {
                         DeleteStuff, UpdateStuff, AddStuff, AddRanges, BulkyInserts,
                         FetchStuff, FetchStuff, FetchStuff, FetchStuff, FetchStuff
                     };
-
+                    
                     foreach (var t in tests)
-                        actions.Add(t.BeginInvoke(tree, null, null));
+                    {
+                        actions.Add(Task.Run(() => t(tree)));
+                    }
 
                     do
                     {
-                        Trace.TraceInformation("Dictionary.Count = {0}", tree.Count);
+                        TestContext.WriteLine("Dictionary.Count = {0}", tree.Count);
                         Thread.Sleep(1000);
                     } while (Debugger.IsAttached);
 
                     mreStop.Set();
-                    for (int i = 0; i < actions.Count; i++)
-                    {
-                        tests[i].EndInvoke(actions[i]);
-                    }
 
-                    Trace.TraceInformation("Dictionary.Count = {0}", tree.Count);
+                    Task.WhenAll(actions).GetAwaiter().GetResult();
+                    
+                    TestContext.WriteLine("Dictionary.Count = {0}", tree.Count);
                 }
             }
         }
