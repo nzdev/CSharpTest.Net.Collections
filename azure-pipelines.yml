@@ -39,13 +39,14 @@ stages:
                 command: build
                 projects: $(solution)
                 arguments: '--configuration $(buildConfiguration) --no-restore -p:ContinuousIntegrationBuild=true'
+            - task: DotNetCoreCLI@2
+              displayName: Run dotnet pack
+              inputs:
+                command: pack
+                projects: $(solution)
+                arguments: '--configuration $(buildConfiguration) --no-build --no-restore --output $(Build.ArtifactStagingDirectory)'
             - task: PublishPipelineArtifact@1
-              displayName: Publish nupkg
+              displayName: Publish NuGet
               inputs:
                 targetPath: $(Build.ArtifactStagingDirectory)
                 artifactName: NuGet
-            - task: PublishPipelineArtifact@1
-              displayName: Publish build artifacts
-              inputs:
-                targetPath: $(Build.SourcesDirectory)
-                artifactName: build_output
