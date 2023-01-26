@@ -107,3 +107,51 @@ stages:
                 projects: '**/*.Test.csproj'
                 arguments: '--configuration $(buildConfiguration)'
                 testRunTitle: Unit Tests - $(Agent.OS)
+                
+  ###############################################
+  ## Release
+  ###############################################
+    - stage: Deploy_MyGet
+      displayName: MyGet pre-release
+      dependsOn:
+        - Build
+      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.myGetDeploy}}))
+      jobs:
+        - job:
+          displayName: Push to pre-release feed
+          steps:
+            - checkout: none
+            - task: DownloadPipelineArtifact@2
+              displayName: Download nupkg
+              inputs:
+                artifact: nupkg
+                path: $(Build.ArtifactStagingDirectory)
+            - task: NuGetCommand@2
+              displayName: NuGet push
+              inputs:
+                command: 'push'
+                packagesToPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
+                nuGetFeedType: 'external'
+                publishFeedCredentials: 'MyGet - Pre-releases'
+    - stage: Deploy_NuGet
+      displayName: NuGet release
+      dependsOn:
+        - Deploy_MyGet
+      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.nuGetDeploy}}))
+      jobs:
+        - job:
+          displayName: Push to NuGet
+          steps:
+            - checkout: none
+            - task: DownloadPipelineArtifact@2
+              displayName: Download nupkg
+              inputs:
+                artifact: nupkg
+                path: $(Build.ArtifactStagingDirectory)/nupkg
+            - task: NuGetCommand@2
+              displayName: NuGet push
+              inputs:
+                command: 'push'
+                packagesToPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
+                nuGetFeedType: 'external'
+                publishFeedCredentials: 'NuGet - Umbraco.*'
