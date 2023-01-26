@@ -7,7 +7,16 @@ trigger:
   - main
   - refs/tags/release/*
   - refs/pull/*
-
+parameters:
+  - name: myGetDeploy
+    displayName: Deploy to MyGet
+    type: boolean
+    default: false
+  - name: nuGetDeploy
+    displayName: Deploy to NuGet
+    type: boolean
+    default: false
+    
 variables:
   solution: CSharpTest.Net.Collections.sln
   buildConfiguration: Release
