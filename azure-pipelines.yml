@@ -124,6 +124,7 @@ stages:
       displayName: MyGet pre-release
       dependsOn:
         - Build
+        - Unit
       condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.myGetDeploy}}))
       jobs:
         - job:
