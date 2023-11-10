@@ -13,11 +13,13 @@
  */
 #endregion
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Interfaces;
+using Microsoft.IO;
 using Microsoft.Win32.SafeHandles;
 
 // ReSharper disable InconsistentNaming
@@ -35,7 +37,8 @@ namespace CSharpTest.Net.IO
         #region Options and Delegates
         delegate void FPut(long position, byte[] bytes, int offset, int length);
         delegate int FGet(long position, byte[] bytes, int offset, int length);
-
+        private static readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager = new RecyclableMemoryStreamManager();
+        private static readonly ArrayPool<byte> _bytePool = ArrayPool<byte>.Create();
         /// <summary>
         /// Advanced Options used to construct a TransactedCompoundFile
         /// </summary>
@@ -598,6 +601,14 @@ namespace CSharpTest.Net.IO
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="bytes">Buffer</param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         private int ReadBytes(long position, byte[] bytes, int offset, int length)
         {
             if (_readers != null)
@@ -886,13 +897,18 @@ namespace CSharpTest.Net.IO
                 int readBytes, headerSize, length;
                 do
                 {
+
                     retry = false;
                     long position = _sectionPosition + (BlockSize*block.Offset);
-                    bytes = new byte[headerOnly ? BlockHeaderSize : block.ActualBlocks * BlockSize];
+                    var byteArrayLength = headerOnly ? BlockHeaderSize : block.ActualBlocks * BlockSize;
+                    bytes = _bytePool.Rent(byteArrayLength);//new byte[byteArrayLength];
 
                     readBytes = fget(position, bytes, 0, bytes.Length);
                     if (readBytes < BlockHeaderSize)
+                    {
+                        _bytePool.Return(bytes);
                         throw new InvalidDataException();
+                    }
 
                     headerSize = bytes[OffsetOfHeaderSize];
                     length = (int) GetUInt32(bytes, OffsetOfLength);
@@ -903,13 +919,22 @@ namespace CSharpTest.Net.IO
                     if (headerSize < BlockHeaderSize || blockId != block.Identity ||
                         ((block.Count < 16 && block.ActualBlocks != block.Count) ||
                          (block.Count == 16 && block.ActualBlocks < 16)))
+                    {
+                        _bytePool.Return(bytes);
                         throw new InvalidDataException();
+                    }
 
                     if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1)/BlockSize))
+                    {
+                        _bytePool.Return(bytes);
                         throw new InvalidDataException();
+                    }
 
                     if (headerOnly)
+                    {
                         return null;
+                    }
+
                     if (readBytes < length + headerSize)
                     {
                         retry = bytes.Length != block.ActualBlocks*BlockSize;
@@ -917,14 +942,22 @@ namespace CSharpTest.Net.IO
                 } while (retry);
 
                 if (readBytes < length + headerSize)
+                {
+                    _bytePool.Return(bytes);
                     throw new InvalidDataException();
+                }
 
                 Crc32 crc = new Crc32();
                 crc.Add(bytes, headerSize, length);
                 if ((uint)crc.Value != GetUInt32(bytes, OffsetOfCrc32))
+                {
+                    _bytePool.Return(bytes);
                     throw new InvalidDataException();
+                }
+                var memoryStream = _recyclableMemoryStreamManager.GetStream(bytes.AsSpan().Slice(headerSize, length));
+                _bytePool.Return(bytes);
 
-                return new MemoryStream(bytes, headerSize, length, false, false);
+                return memoryStream;// new MemoryStream(bytes, headerSize, length, false, false);
             }
 
             public void GetFree(ICollection<int> freeHandles, ICollection<int> usedBlocks, FGet fget)
