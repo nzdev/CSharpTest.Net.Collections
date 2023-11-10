@@ -94,7 +94,6 @@ stages:
       displayName: MyGet pre-release
       dependsOn:
         - Build
-      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.myGetDeploy}}))
       jobs:
         - job:
           displayName: Push to pre-release feed
@@ -116,7 +115,6 @@ stages:
       displayName: NuGet release
       dependsOn:
         - Deploy_MyGet
-      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.nuGetDeploy}}))
       jobs:
         - job:
           displayName: Push to NuGet
