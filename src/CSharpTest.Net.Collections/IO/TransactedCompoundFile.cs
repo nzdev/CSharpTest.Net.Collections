@@ -906,7 +906,7 @@ namespace CSharpTest.Net.IO
                     readBytes = fget(position, bytes, 0, bytes.Length);
                     if (readBytes < BlockHeaderSize)
                     {
-                        _bytePool.Return(bytes);
+                        _bytePool.Return(bytes,true);
                         throw new InvalidDataException();
                     }
 
@@ -920,13 +920,13 @@ namespace CSharpTest.Net.IO
                         ((block.Count < 16 && block.ActualBlocks != block.Count) ||
                          (block.Count == 16 && block.ActualBlocks < 16)))
                     {
-                        _bytePool.Return(bytes);
+                        _bytePool.Return(bytes, true);
                         throw new InvalidDataException();
                     }
 
                     if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1)/BlockSize))
                     {
-                        _bytePool.Return(bytes);
+                        _bytePool.Return(bytes, true);
                         throw new InvalidDataException();
                     }
 
@@ -943,7 +943,7 @@ namespace CSharpTest.Net.IO
 
                 if (readBytes < length + headerSize)
                 {
-                    _bytePool.Return(bytes);
+                    _bytePool.Return(bytes, true);
                     throw new InvalidDataException();
                 }
 
@@ -951,11 +951,11 @@ namespace CSharpTest.Net.IO
                 crc.Add(bytes, headerSize, length);
                 if ((uint)crc.Value != GetUInt32(bytes, OffsetOfCrc32))
                 {
-                    _bytePool.Return(bytes);
+                    _bytePool.Return(bytes, true);
                     throw new InvalidDataException();
                 }
                 var memoryStream = _recyclableMemoryStreamManager.GetStream(bytes.AsSpan().Slice(headerSize, length));
-                _bytePool.Return(bytes);
+                _bytePool.Return(bytes, true);
 
                 return memoryStream;// new MemoryStream(bytes, headerSize, length, false, false);
             }
