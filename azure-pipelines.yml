@@ -91,7 +91,7 @@ stages:
   ## Release
   ###############################################
     - stage: Deploy_MyGet
-      displayName: MyGet pre-release
+      displayName: Azure DevOps pre-release
       dependsOn:
         - Build
       jobs:

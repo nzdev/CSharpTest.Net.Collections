@@ -22,7 +22,7 @@
     <PackageReleaseNotes>Breaking change to support block lize &gt; 4096.</PackageReleaseNotes>
     <AssemblyVersion>15.0.0</AssemblyVersion>
     <FileVersion>15.0.0</FileVersion>
-    <Version>15.0.1</Version>
+    <Version>15.0.2</Version>
     <PackageId>Umbraco.CSharpTest.Net.Collections</PackageId>
     <Authors>Roger Knapp, Bjarke Berg</Authors>
   </PropertyGroup>
