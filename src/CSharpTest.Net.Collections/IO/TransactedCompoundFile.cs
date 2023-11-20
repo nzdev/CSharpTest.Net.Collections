@@ -907,7 +907,7 @@ namespace CSharpTest.Net.IO
                     if (readBytes < BlockHeaderSize)
                     {
                         _bytePool.Return(bytes,true);
-                        throw new InvalidDataException();
+                        throw new InvalidDataException("1");
                     }
 
                     headerSize = bytes[OffsetOfHeaderSize];
@@ -921,13 +921,13 @@ namespace CSharpTest.Net.IO
                          (block.Count == 16 && block.ActualBlocks < 16)))
                     {
                         _bytePool.Return(bytes, true);
-                        throw new InvalidDataException();
+                        throw new InvalidDataException("2");
                     }
 
                     if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1)/BlockSize))
                     {
                         _bytePool.Return(bytes, true);
-                        throw new InvalidDataException();
+                        throw new InvalidDataException("3");
                     }
 
                     if (headerOnly)
@@ -944,7 +944,7 @@ namespace CSharpTest.Net.IO
                 if (readBytes < length + headerSize)
                 {
                     _bytePool.Return(bytes, true);
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("4");
                 }
 
                 Crc32 crc = new Crc32();
@@ -952,7 +952,7 @@ namespace CSharpTest.Net.IO
                 if ((uint)crc.Value != GetUInt32(bytes, OffsetOfCrc32))
                 {
                     _bytePool.Return(bytes, true);
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("5");
                 }
                 var memoryStream = _recyclableMemoryStreamManager.GetStream(bytes.AsSpan().Slice(headerSize, length));
                 _bytePool.Return(bytes, true);
