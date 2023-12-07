@@ -897,23 +897,23 @@ namespace CSharpTest.Net.IO
                 int readBytes, headerSize, length;
                 do
                 {
-
                     retry = false;
-                    long position = _sectionPosition + (BlockSize*block.Offset);
+                    long position = _sectionPosition + (BlockSize * block.Offset);
                     var byteArrayLength = headerOnly ? BlockHeaderSize : block.ActualBlocks * BlockSize;
-                    bytes = _bytePool.Rent(byteArrayLength);//new byte[byteArrayLength];
 
-                    readBytes = fget(position, bytes, 0, bytes.Length);
+                    bytes = _bytePool.Rent(byteArrayLength);
+
+                    readBytes = fget(position, bytes, 0, byteArrayLength);
                     if (readBytes < BlockHeaderSize)
                     {
-                        _bytePool.Return(bytes,true);
+                        _bytePool.Return(bytes, true);
                         throw new InvalidDataException("1");
                     }
 
                     headerSize = bytes[OffsetOfHeaderSize];
-                    length = (int) GetUInt32(bytes, OffsetOfLength);
+                    length = (int)GetUInt32(bytes, OffsetOfLength);
 
-                    block.ActualBlocks = (int) GetUInt32(bytes, OffsetOfBlockCount);
+                    block.ActualBlocks = (int)GetUInt32(bytes, OffsetOfBlockCount);
                     uint blockId = GetUInt32(bytes, OffsetOfBlockId);
 
                     if (headerSize < BlockHeaderSize || blockId != block.Identity ||
@@ -924,7 +924,7 @@ namespace CSharpTest.Net.IO
                         throw new InvalidDataException("2");
                     }
 
-                    if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1)/BlockSize))
+                    if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1) / BlockSize))
                     {
                         _bytePool.Return(bytes, true);
                         throw new InvalidDataException("3");
@@ -937,7 +937,7 @@ namespace CSharpTest.Net.IO
 
                     if (readBytes < length + headerSize)
                     {
-                        retry = bytes.Length != block.ActualBlocks*BlockSize;
+                        retry = byteArrayLength != block.ActualBlocks * BlockSize;
                     }
                 } while (retry);
 
@@ -954,10 +954,11 @@ namespace CSharpTest.Net.IO
                     _bytePool.Return(bytes, true);
                     throw new InvalidDataException("5");
                 }
+
                 var memoryStream = _recyclableMemoryStreamManager.GetStream(bytes.AsSpan().Slice(headerSize, length));
                 _bytePool.Return(bytes, true);
 
-                return memoryStream;// new MemoryStream(bytes, headerSize, length, false, false);
+                return memoryStream;
             }
 
             public void GetFree(ICollection<int> freeHandles, ICollection<int> usedBlocks, FGet fget)

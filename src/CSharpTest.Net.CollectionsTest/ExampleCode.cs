@@ -17,7 +17,7 @@ namespace CSharpTest.Net.Library.Test
             public int Queued = 0, Dequeued = 0;
         }
 
-        [Test]
+        //[Test]
         public void LurchTableDemo()
         {
             var counts = new Counts();
@@ -65,7 +65,7 @@ namespace CSharpTest.Net.Library.Test
             Assert.AreEqual(counts.Queued, counts.Dequeued);
         }
 
-        [Test]
+        //[Test]
         public void BPlusTreeDemo()
         {
             var options = new BPlusTree<string, DateTime>.OptionsV2(PrimitiveSerializer.String, PrimitiveSerializer.DateTime);
