@@ -24,7 +24,7 @@
     <FileVersion>14.906.1403.1085</FileVersion>
     <PackageId>Umbraco.CSharpTest.Net.Collections</PackageId>
     <Authors>Roger Knapp, Bjarke Berg</Authors>
-    <Version>14.906.1403.1085</Version>
+    <Version>14.906.1403.1095</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
