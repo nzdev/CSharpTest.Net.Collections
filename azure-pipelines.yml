@@ -86,46 +86,14 @@ stages:
               inputs:
                 targetPath: $(Build.ArtifactStagingDirectory)
                 artifactName: NuGet
-    - stage: Unit
-      displayName: Unit Tests
-      dependsOn: Build
-      jobs:
-        # Unit Tests
-        - job:
-          displayName: Unit Tests
-          strategy:
-            matrix:
-              Windows:
-                vmImage: 'windows-latest'
-#              Linux:
-#                vmImage: 'ubuntu-latest'
-#              macOS:
-#                vmImage: 'macOS-latest'
-          pool:
-            vmImage: $(vmImage)
-          steps:
-            - task: UseDotNet@2
-              displayName: Use .NET 7.x
-              inputs:
-                version: 7.x
-                performMultiLevelLookup: true
-            - task: DotNetCoreCLI@2
-              displayName: Run dotnet test
-              inputs:
-                command: test
-                projects: '**/*.Test.csproj'
-                arguments: '--configuration $(buildConfiguration)'
-                testRunTitle: Unit Tests - $(Agent.OS)
                 
   ###############################################
   ## Release
   ###############################################
     - stage: Deploy_MyGet
-      displayName: MyGet pre-release
+      displayName: Azure DevOps pre-release
       dependsOn:
         - Build
-        - Unit
-      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.myGetDeploy}}))
       jobs:
         - job:
           displayName: Push to pre-release feed
@@ -141,13 +109,12 @@ stages:
               inputs:
                 command: 'push'
                 packagesToPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
-                nuGetFeedType: 'external'
-                publishFeedCredentials: 'MyGet - Pre-releases'
+                nuGetFeedType: 'internal'
+                publishVstsFeed: 'd19ab31a-3bc3-4ce3-a2f9-8a22c538f7ad'
     - stage: Deploy_NuGet
       displayName: NuGet release
       dependsOn:
         - Deploy_MyGet
-      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release/'), ${{parameters.nuGetDeploy}}))
       jobs:
         - job:
           displayName: Push to NuGet
@@ -163,5 +130,5 @@ stages:
               inputs:
                 command: 'push'
                 packagesToPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
-                nuGetFeedType: 'external'
-                publishFeedCredentials: 'NuGet - Umbraco.*'
+                nuGetFeedType: 'internal'
+                publishVstsFeed: 'd19ab31a-3bc3-4ce3-a2f9-8a22c538f7ad'

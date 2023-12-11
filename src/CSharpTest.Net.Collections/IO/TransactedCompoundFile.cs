@@ -13,11 +13,13 @@
  */
 #endregion
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Interfaces;
+using Microsoft.IO;
 using Microsoft.Win32.SafeHandles;
 
 // ReSharper disable InconsistentNaming
@@ -35,6 +37,8 @@ namespace CSharpTest.Net.IO
         #region Options and Delegates
         delegate void FPut(long position, byte[] bytes, int offset, int length);
         delegate int FGet(long position, byte[] bytes, int offset, int length);
+        private static readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager = new RecyclableMemoryStreamManager();
+        private static readonly ArrayPool<byte> _bytePool = ArrayPool<byte>.Create();
 
         /// <summary>
         /// Advanced Options used to construct a TransactedCompoundFile
@@ -888,11 +892,16 @@ namespace CSharpTest.Net.IO
                 {
                     retry = false;
                     long position = _sectionPosition + (BlockSize*block.Offset);
-                    bytes = new byte[headerOnly ? BlockHeaderSize : block.ActualBlocks * BlockSize];
+                    var byteArrayLength = headerOnly ? BlockHeaderSize : block.ActualBlocks * BlockSize;
 
-                    readBytes = fget(position, bytes, 0, bytes.Length);
+                    bytes = _bytePool.Rent(byteArrayLength);
+
+                    readBytes = fget(position, bytes, 0, byteArrayLength);
                     if (readBytes < BlockHeaderSize)
-                        throw new InvalidDataException();
+                    {
+                        _bytePool.Return(bytes, true);
+                        throw new InvalidDataException("1");
+                    }
 
                     headerSize = bytes[OffsetOfHeaderSize];
                     length = (int) GetUInt32(bytes, OffsetOfLength) & 0x00FFFFFF;
@@ -900,31 +909,70 @@ namespace CSharpTest.Net.IO
                     block.ActualBlocks = (int) GetUInt32(bytes, OffsetOfBlockCount);
                     uint blockId = GetUInt32(bytes, OffsetOfBlockId);
 
+                    if (headerSize < BlockHeaderSize)
+                    {
+                        throw new InvalidDataException("2A");
+                    }
+                    if (blockId != block.Identity)
+                    {
+                        throw new InvalidDataException("2B");
+                    }
+                    if (block.Count < 16 && block.ActualBlocks != block.Count)
+                    {
+                        throw new InvalidDataException("2C");
+                    }
+                    if ((block.Count == 16 && block.ActualBlocks < 16))
+                    {
+                        throw new InvalidDataException("2D");
+                    }
+
                     if (headerSize < BlockHeaderSize || blockId != block.Identity ||
                         ((block.Count < 16 && block.ActualBlocks != block.Count) ||
                          (block.Count == 16 && block.ActualBlocks < 16)))
-                        throw new InvalidDataException();
+                    {
+                        _bytePool.Return(bytes, true);
+                        throw new InvalidDataException("2");
+                    }
 
                     if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1)/BlockSize))
-                        throw new InvalidDataException();
+                    {
+                        _bytePool.Return(bytes, true);
+                        throw new InvalidDataException("3");
+                    }
 
                     if (headerOnly)
+                    {
+                        _bytePool.Return(bytes, true);
                         return null;
+                    }
                     if (readBytes < length + headerSize)
                     {
-                        retry = bytes.Length != block.ActualBlocks*BlockSize;
+                        retry = byteArrayLength != block.ActualBlocks*BlockSize;
+                    }
+                    if (retry)
+                    {
+                        _bytePool.Return(bytes, true);
                     }
                 } while (retry);
 
                 if (readBytes < length + headerSize)
-                    throw new InvalidDataException();
+                {
+                    _bytePool.Return(bytes, true);
+                    throw new InvalidDataException("4");
+                }
 
                 Crc32 crc = new Crc32();
                 crc.Add(bytes, headerSize, length);
                 if ((uint)crc.Value != GetUInt32(bytes, OffsetOfCrc32))
-                    throw new InvalidDataException();
+                {
+                    _bytePool.Return(bytes, true);
+                    throw new InvalidDataException("5");
+                }
 
-                return new MemoryStream(bytes, headerSize, length, false, false);
+                var buffer = bytes.AsSpan().Slice(headerSize, length);
+                var memoryStream = _recyclableMemoryStreamManager.GetStream(buffer);
+                _bytePool.Return(bytes, true);
+                return memoryStream;
             }
 
             public void GetFree(ICollection<int> freeHandles, ICollection<int> usedBlocks, FGet fget)
