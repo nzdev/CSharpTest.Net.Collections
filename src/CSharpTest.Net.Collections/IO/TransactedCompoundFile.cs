@@ -916,6 +916,23 @@ namespace CSharpTest.Net.IO
                     block.ActualBlocks = (int)GetUInt32(bytes, OffsetOfBlockCount);
                     uint blockId = GetUInt32(bytes, OffsetOfBlockId);
 
+                    if(headerSize < BlockHeaderSize)
+                    {
+                        throw new InvalidDataException("2A");
+                    }
+                    if (blockId != block.Identity)
+                    {
+                        throw new InvalidDataException("2B");
+                    }
+                    if (block.Count < 16 && block.ActualBlocks != block.Count)
+                    {
+                        throw new InvalidDataException("2C");
+                    }
+                    if ((block.Count == 16 && block.ActualBlocks < 16))
+                    {
+                        throw new InvalidDataException("2D");
+                    }
+
                     if (headerSize < BlockHeaderSize || blockId != block.Identity ||
                         ((block.Count < 16 && block.ActualBlocks != block.Count) ||
                          (block.Count == 16 && block.ActualBlocks < 16)))
@@ -932,12 +949,17 @@ namespace CSharpTest.Net.IO
 
                     if (headerOnly)
                     {
+                        _bytePool.Return(bytes, true);
                         return null;
                     }
 
                     if (readBytes < length + headerSize)
                     {
                         retry = byteArrayLength != block.ActualBlocks * BlockSize;
+                    }
+                    if (retry)
+                    {
+                        _bytePool.Return(bytes, true);
                     }
                 } while (retry);
 
@@ -954,8 +976,8 @@ namespace CSharpTest.Net.IO
                     _bytePool.Return(bytes, true);
                     throw new InvalidDataException("5");
                 }
-
-                var memoryStream = _recyclableMemoryStreamManager.GetStream(bytes.AsSpan().Slice(headerSize, length));
+                var buffer = bytes.AsSpan().Slice(headerSize, length);
+                var memoryStream = _recyclableMemoryStreamManager.GetStream(buffer);
                 _bytePool.Return(bytes, true);
 
                 return memoryStream;
