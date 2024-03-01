@@ -907,7 +907,7 @@ namespace CSharpTest.Net.IO
                     if (readBytes < BlockHeaderSize)
                     {
                         _bytePool.Return(bytes, true);
-                        throw new InvalidDataException("1");
+                        throw new InvalidDataException();
                     }
 
                     headerSize = bytes[OffsetOfHeaderSize];
@@ -918,19 +918,19 @@ namespace CSharpTest.Net.IO
 
                     if(headerSize < BlockHeaderSize)
                     {
-                        throw new InvalidDataException("2A");
+                        throw new InvalidDataException();
                     }
                     if (blockId != block.Identity)
                     {
-                        throw new InvalidDataException("2B");
+                        throw new InvalidDataException();
                     }
                     if (block.Count < 16 && block.ActualBlocks != block.Count)
                     {
-                        throw new InvalidDataException("2C");
+                        throw new InvalidDataException();
                     }
                     if ((block.Count == 16 && block.ActualBlocks < 16))
                     {
-                        throw new InvalidDataException("2D");
+                        throw new InvalidDataException();
                     }
 
                     if (headerSize < BlockHeaderSize || blockId != block.Identity ||
@@ -938,13 +938,13 @@ namespace CSharpTest.Net.IO
                          (block.Count == 16 && block.ActualBlocks < 16)))
                     {
                         _bytePool.Return(bytes, true);
-                        throw new InvalidDataException("2");
+                        throw new InvalidDataException();
                     }
 
                     if (block.ActualBlocks != Math.Max(1, (length + headerSize + BlockSize - 1) / BlockSize))
                     {
                         _bytePool.Return(bytes, true);
-                        throw new InvalidDataException("3");
+                        throw new InvalidDataException();
                     }
 
                     if (headerOnly)
@@ -966,7 +966,7 @@ namespace CSharpTest.Net.IO
                 if (readBytes < length + headerSize)
                 {
                     _bytePool.Return(bytes, true);
-                    throw new InvalidDataException("4");
+                    throw new InvalidDataException();
                 }
 
                 Crc32 crc = new Crc32();
@@ -974,7 +974,7 @@ namespace CSharpTest.Net.IO
                 if ((uint)crc.Value != GetUInt32(bytes, OffsetOfCrc32))
                 {
                     _bytePool.Return(bytes, true);
-                    throw new InvalidDataException("5");
+                    throw new InvalidDataException();
                 }
                 var buffer = bytes.AsSpan().Slice(headerSize, length);
                 var memoryStream = _recyclableMemoryStreamManager.GetStream(buffer);
